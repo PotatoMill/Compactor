@@ -2,7 +2,7 @@
 #include <Servo.h>
 #include "Hbro.h"
 
-int pumpPWMPin = 10; //10
+int pumpPWMPin = 3; //10
 int pumpEnablePin = 16;
 
 int pumpButtonPin  = 8;
@@ -35,9 +35,11 @@ void loop() {
 
   if(digitalRead(pumpButtonPin) == HIGH){ //hvis knappen for pumpen er inne skal den på
     vakuumMotor.setSpeed(1,250);
+    Serial.println("Pump on");
   }
   else{
     vakuumMotor.setSpeed(1,0); //hvis knappen for pumpen er ute skal den av
+    Serial.println("Pump off");
   }
 
   if(digitalRead(lidButtonPin)==HIGH){ //hvis luke knappen blir trykket
@@ -45,12 +47,15 @@ void loop() {
       lukeServo.write(0);
       delay(1000); //venter litt så hvis knappen blir hold inn så vil den ikke skifte retning med en gang
       servoState = 0;
+      Serial.println("Change servo to 0");
     }
     else{
       lukeServo.write(180);
       delay(1000); //venter litt så hvis knappen blir hold inn så vil den ikke skifte retning med en gang
       servoState = 180;
+      Serial.println("Change servo to 180");
     }
   }
+  delay(200);
 
 }
