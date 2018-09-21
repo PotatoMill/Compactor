@@ -7,13 +7,15 @@ int pumpEnablePin = 16;
 
 int pumpButtonPin  = 8;
 int lidButtonPin = 7;
-int stopButtonPin = 6;
+int stopButtonPin = 4;
 int highPin = 5;
 
 int servoPin = 9;
+int servoPin2 = 6;
 int servoState = 180; //vinkel servoen står på i grader. Range 0-180
 
 Servo lukeServo; //setter opp en klasse for  servoen til luken
+Servo lukeServo2;
 Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp en klasse for vakuum motoren
 
 void setup() {
@@ -28,6 +30,10 @@ void setup() {
   digitalWrite(highPin, HIGH);
 
   lukeServo.attach(servoPin);
+  lukeServo2.attach(servoPin2);
+
+  lukeServo.write(180);
+  lukeServo2.write(0);
 }
 
 
@@ -44,13 +50,21 @@ void loop() {
 
   if(digitalRead(lidButtonPin)==HIGH){ //hvis luke knappen blir trykket
     if(servoState == 180){ //hvis den allerede er åpen må den lukkes
-      lukeServo.write(0);
+      for(int i = 180; i > 0; i-=1){
+        lukeServo.write(i);
+        lukeServo2.write(180-i);
+        delay(10);
+      }
       delay(1000); //venter litt så hvis knappen blir hold inn så vil den ikke skifte retning med en gang
       servoState = 0;
       Serial.println("Change servo to 0");
     }
     else{
-      lukeServo.write(180);
+      for(int i = 0; i < 180; i+=1){
+        lukeServo.write(i);
+        lukeServo2.write(180-i);
+        delay(10);
+      }
       delay(1000); //venter litt så hvis knappen blir hold inn så vil den ikke skifte retning med en gang
       servoState = 180;
       Serial.println("Change servo to 180");
