@@ -1,75 +1,81 @@
 #include <Arduino.h>
 #include <Servo.h>
 #include "Hbro.h"
+#include "PowerMeter30A.h"
 
-int pumpPWMPin = 3; //10
-int pumpEnablePin = 16;
+int pumpPWMPin = 3; //bestemmer forrovehastigheten på pumpe motoren
+int pumpEnablePin = 16; //enabler forover. Kan være høy hele siden PWM styrer hastighet. Høy er på
+int lukeForPWMPin = 9; //gir forrover signal til H-boren, bakover PWM må være 0 for at den skal fungere
+int lukeBackPWMPin =6; //gir bakover signal til H-broen, forrover PWM må være 0 for at den skal fungere
 
-int pumpButtonPin  = 8;
-int lidButtonPin = 7;
-int stopButtonPin = 4;
-int highPin = 5;
+int pumpButtonPin  = 8; //kanpp for å starte pumpen, når den er inne kjører pumpen
+int lidOpenButtonPin = 7;
+int lidCloseButtonPin = 4;
+int highPin = 5; //bare for å ta ut 5V
+int powerMeterPin = A0;
+float current = 0;
+int openFlag = 0; //er 1 når lokket er oppe og 0 når det er alt annet
 
-int servoPin = 9;
-int servoPin2 = 6;
-int servoState = 180; //vinkel servoen står på i grader. Range 0-180
-
-Servo lukeServo; //setter opp en klasse for  servoen til luken
-Servo lukeServo2;
-Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp en klasse for vakuum motoren
+Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp et objekt for pumpen
+Hbro lukeMotorer(lukeForPWMPin, lukeBackPWMPin, 0, 0); //setter opp et objekt for luken, her blir begge motorene kjørt i paralell
+PowerMeter30A lukePower(powerMeterPin);
 
 void setup() {
   Serial.begin(9600);
-  vakuumMotor.setupFuction();
-  vakuumMotor.enableDebugging();
+  vakuumMotor.setupFuction(); //setter inputs og outputs
+  //vakuumMotor.enableDebugging(); //skriver info til konsoll så man kan overvåke
+  lukeMotorer.setupFuction(); //setter inputs og outputs
+  //lukeMotorer.enableDebugging(); //skriver info til konsoll så man kan overvåke
 
-  pinMode(pumpButtonPin, INPUT);
-  pinMode(lidButtonPin, INPUT);
-  pinMode(stopButtonPin, INPUT);
-  pinMode(highPin, OUTPUT);
-  digitalWrite(highPin, HIGH);
+  pinMode(pumpButtonPin, INPUT); //tar inn signal fra knapp. 5V er høy 0V er lav
+  pinMode(lidOpenButtonPin, INPUT); //tar inn signal fra knapp. 5V er høy 0V er lav
+  pinMode(lidCloseButtonPin, INPUT); //tar inn signal fra knapp. 5V er høy 0V er lav
+  pinMode(highPin, OUTPUT); //pinne for 5V
+  digitalWrite(highPin, HIGH); //pinne for 5V
 
-  lukeServo.attach(servoPin);
-  lukeServo2.attach(servoPin2);
-
-  lukeServo.write(180);
-  lukeServo2.write(0);
+  //no setup for analog input needed
 }
 
 
 void loop() {
 
   if(digitalRead(pumpButtonPin) == HIGH){ //hvis knappen for pumpen er inne skal den på
-    vakuumMotor.setSpeed(1,250);
     Serial.println("Pump on");
+    vakuumMotor.setSpeed(1,250);
   }
   else{
+    //Serial.println("Pump off");
     vakuumMotor.setSpeed(1,0); //hvis knappen for pumpen er ute skal den av
-    Serial.println("Pump off");
   }
 
-  if(digitalRead(lidButtonPin)==HIGH){ //hvis luke knappen blir trykket
-    if(servoState == 180){ //hvis den allerede er åpen må den lukkes
-      for(int i = 180; i > 0; i-=1){
-        lukeServo.write(i);
-        lukeServo2.write(180-i);
-        delay(10);
-      }
-      delay(1000); //venter litt så hvis knappen blir hold inn så vil den ikke skifte retning med en gang
-      servoState = 0;
-      Serial.println("Change servo to 0");
+  if(digitalRead(lidOpenButtonPin)==HIGH){ //lokket kjører opp så lenge knappen er inne og den ikke er på toppen
+    Serial.println("Open lid");
+    if(current < 0.36 && openFlag == 0){ //lokket går bare opp hvis det ikke er oppe fra før eller det spenningen øker fra at det har nådd toppen
+      lukeMotorer.setSpeed(0,250);
     }
     else{
-      for(int i = 0; i < 180; i+=1){
-        lukeServo.write(i);
-        lukeServo2.write(180-i);
-        delay(10);
-      }
-      delay(1000); //venter litt så hvis knappen blir hold inn så vil den ikke skifte retning med en gang
-      servoState = 180;
-      Serial.println("Change servo to 180");
+        lukeMotorer.setSpeed(0, 0);
+        openFlag = 1; //flagge er satt til 1 for å vise at lokket er oppe
     }
   }
-  delay(200);
-
+  else if(digitalRead(lidCloseButtonPin)==HIGH){ //lokket kjører ned så lenge kanppen er inne
+    Serial.println("Close lid");
+    openFlag = 0; //siden luken har gått ned er den ikke åpen lengre
+    if(current > 0.1){ //hvis luken er på bunnen skal den gi ekstra gass for å trykke ned lokket
+      lukeMotorer.setSpeed(1,250);
+      Serial.println("Boost!");
+    }
+    else{
+        lukeMotorer.setSpeed(1, 100); //vanlig lukking
+    }
+    
+  }
+  else{
+    //Serial.println("neutral");
+    lukeMotorer.setSpeed(0,0);
+  }
+  //Serial.print("Voltage: ");
+  current = 0.95*current + 0.05*lukePower.getCurrent();
+  Serial.println(current);
+  delay(10); //for debouncing
 }
