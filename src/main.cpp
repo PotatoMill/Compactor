@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Servo.h>
 #include "Hbro.h"
-#include "PowerMeter30A.h"
+#include "CurrentSensor30A.h"
 
 int pumpPWMPin = 3; //bestemmer forrovehastigheten på pumpe motoren
 int pumpEnablePin = 16; //enabler forover. Kan være høy hele siden PWM styrer hastighet. Høy er på
@@ -12,13 +12,13 @@ int pumpButtonPin  = 8; //kanpp for å starte pumpen, når den er inne kjører p
 int lidOpenButtonPin = 7;
 int lidCloseButtonPin = 4;
 int highPin = 5; //bare for å ta ut 5V
-int powerMeterPin = A0;
+int currentSensorPin = A0;
 float current = 0;
 int openFlag = 0; //er 1 når lokket er oppe og 0 når det er alt annet
 
 Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp et objekt for pumpen
 Hbro lukeMotorer(lukeForPWMPin, lukeBackPWMPin, 0, 0); //setter opp et objekt for luken, her blir begge motorene kjørt i paralell
-PowerMeter30A lukePower(powerMeterPin);
+CurrentSensor30A lukeCurrent(currentSensorPin);
 
 void setup() {
   Serial.begin(9600);
@@ -68,14 +68,14 @@ void loop() {
     else{
         lukeMotorer.setSpeed(1, 100); //vanlig lukking
     }
-    
+
   }
   else{
     //Serial.println("neutral");
     lukeMotorer.setSpeed(0,0);
   }
   //Serial.print("Voltage: ");
-  current = 0.95*current + 0.05*lukePower.getCurrent();
+  current = 0.95*current + 0.05*lukeCurrent.getCurrent();
   Serial.println(current);
   delay(10); //for debouncing
 }

@@ -5,7 +5,7 @@
 */
 
 
-class PowerMeter30A {
+class CurrentSensor30A {
 private:
 	double m_current{0}; // Current
 	double m_voltage{0}; // Voltage
@@ -16,10 +16,10 @@ private:
 
 public:
 
-	PowerMeter30A(); //Default constructor
-	PowerMeter30A(int analogSignalPin); // Constructor, where the input signal pin can be selected
+	CurrentSensor30A(); //Default constructor
+	CurrentSensor30A(int analogSignalPin); // Constructor, where the input signal pin can be selected
 
-	~PowerMeter30A(); // Destructor
+	~CurrentSensor30A(); // Destructor
 
 	double getCurrent(); // Returns Current in Amps
 	void setAnalogSignalPin(int pinNumber); // Setting the pin for the input signal
