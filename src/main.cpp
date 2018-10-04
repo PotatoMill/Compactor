@@ -16,9 +16,16 @@ int currentSensorPin = A0;
 float current = 0;
 int openFlag = 0; //er 1 når lokket er oppe og 0 når det er alt annet
 
+int vakuumCurrentSensorPin = A3;
+float vCurrent = 0;
+int vCurrentPeakFlag = 0;
+int vakuumDoneFlag = 0;
+int vakuumMotorRunningFlag = 0;
+
 Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp et objekt for pumpen
 Hbro lukeMotorer(lukeForPWMPin, lukeBackPWMPin, 0, 0); //setter opp et objekt for luken, her blir begge motorene kjørt i paralell
 CurrentSensor30A lukeCurrent(currentSensorPin);
+CurrentSensor30A vakuumCurrent(vakuumCurrentSensorPin);
 
 void setup() {
   Serial.begin(9600);
@@ -39,13 +46,15 @@ void setup() {
 
 void loop() {
 
-  if(digitalRead(pumpButtonPin) == HIGH){ //hvis knappen for pumpen er inne skal den på
+  if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
     Serial.println("Pump on");
     vakuumMotor.setSpeed(1,250);
+	vakuumMotorRunningFlag = 1; // Indikerer at vakuum-motoren er på
   }
   else{
     //Serial.println("Pump off");
     vakuumMotor.setSpeed(1,0); //hvis knappen for pumpen er ute skal den av
+	vakuumMotorRunningFlag = 0; // Indikerer at vakuum-motoren er av
   }
 
   if(digitalRead(lidOpenButtonPin)==HIGH){ //lokket kjører opp så lenge knappen er inne og den ikke er på toppen
@@ -56,6 +65,7 @@ void loop() {
     else{
         lukeMotorer.setSpeed(0, 0);
         openFlag = 1; //flagge er satt til 1 for å vise at lokket er oppe
+		vakuumDoneFlag = 0; // Lokket er oppe, derfor kan vakuum startes igjen
     }
   }
   else if(digitalRead(lidCloseButtonPin)==HIGH){ //lokket kjører ned så lenge kanppen er inne
@@ -68,7 +78,6 @@ void loop() {
     else{
         lukeMotorer.setSpeed(1, 100); //vanlig lukking
     }
-
   }
   else{
     //Serial.println("neutral");
@@ -76,6 +85,18 @@ void loop() {
   }
   //Serial.print("Voltage: ");
   current = 0.95*current + 0.05*lukeCurrent.getCurrent();
-  Serial.println(current);
+  vCurrent = 0.95*vCurrent + 0.05*vakuumCurrent.getCurrent();
+
+  if(abs(vCurrent) > 1.45 && !vCurrentPeakFlag && vakuumMotorRunningFlag) { // Hvis strømmen for vakuum peaker
+	  vCurrentPeakFlag = 1;
+  }
+  if(!vakuumMotorRunningFlag) { // Hvis ikke motoren er på, skal peaken resettes
+	  vCurrentPeakFlag = 0;
+  }
+  if(abs(vCurrent) < 1.30 && vCurrentPeakFlag) { // Hvis strømmen har falt etter den har peaket.
+	  vakuumDoneFlag = 1;
+  }
+
+  Serial.println(vCurrent);
   delay(10); //for debouncing
 }
