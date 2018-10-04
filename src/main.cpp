@@ -50,7 +50,7 @@ void loop() {
 
   if(digitalRead(lidOpenButtonPin)==HIGH){ //lokket kjører opp så lenge knappen er inne og den ikke er på toppen
     Serial.println("Open lid");
-    if(current < 0.36 && openFlag == 0){ //lokket går bare opp hvis det ikke er oppe fra før eller det spenningen øker fra at det har nådd toppen
+    if(current < 0.80 && openFlag == 0){ //lokket går bare opp hvis det ikke er oppe fra før eller det spenningen øker fra at det har nådd toppen
       lukeMotorer.setSpeed(0,250);
     }
     else{
@@ -61,7 +61,7 @@ void loop() {
   else if(digitalRead(lidCloseButtonPin)==HIGH){ //lokket kjører ned så lenge kanppen er inne
     Serial.println("Close lid");
     openFlag = 0; //siden luken har gått ned er den ikke åpen lengre
-    if(current > 0.1){ //hvis luken er på bunnen skal den gi ekstra gass for å trykke ned lokket
+    if(current > 0.45){ //hvis luken er på bunnen skal den gi ekstra gass for å trykke ned lokket
       lukeMotorer.setSpeed(1,250);
       Serial.println("Boost!");
     }
