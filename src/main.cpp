@@ -22,6 +22,11 @@ int vCurrentPeakFlag = 0;
 int vakuumDoneFlag = 0;
 int vakuumMotorRunningFlag = 0;
 
+int pirSensorPin = 2; // Pin for å lese pirsensor
+int motionDetected = 0; // Pin som går høy da pirsensor har detektert bevegelse
+unsigned long motionTimer = 0; // Timer som starter når pirsensor detekterer bevegelse, og som brukes for å starte systemet igjen da en viss tid har gått.
+
+
 Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp et objekt for pumpen
 Hbro lukeMotorer(lukeForPWMPin, lukeBackPWMPin, 0, 0); //setter opp et objekt for luken, her blir begge motorene kjørt i paralell
 CurrentSensor30A lukeCurrent(currentSensorPin);
@@ -46,7 +51,17 @@ void setup() {
 
 void loop() {
   Serial.println("Start of loop");
-  if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
+
+  //TODO: Finn en måte å få lokket til å åpne seg da pirsensor detekterer bevegelse. Akkurat nå stopper det bare akkurat der det er.
+
+  if(motionDetected) {
+		if((millis() - motionTimer) >= 20000 && (millis() - motionTimer) <=30000) { // Hvis pirsensor detekterer bevegelse, shuttes systemet ned i 20sek
+  			Serial.println("Motion not detected for 20 seconds, system can start");
+			motionDetected = 0;
+  		}
+	}
+
+  if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag && !motionDetected && 1==0){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
     Serial.println("Pump on");
     vakuumMotor.setSpeed(1,250);
 	vakuumMotorRunningFlag = 1; // Indikerer at vakuum-motoren er på
@@ -59,7 +74,7 @@ void loop() {
 	}
   }
 
-  if(digitalRead(lidOpenButtonPin)==HIGH){ //lokket kjører opp så lenge knappen er inne og den ikke er på toppen
+  if(digitalRead(lidOpenButtonPin)==HIGH && !motionDetected){ //lokket kjører opp så lenge knappen er inne og den ikke er på toppen
     Serial.println("Open lid");
     if(current < 0.80 && openFlag == 0){ //lokket går bare opp hvis det ikke er oppe fra før eller det spenningen øker fra at det har nådd toppen
       lukeMotorer.setSpeed(0,250);
@@ -72,7 +87,7 @@ void loop() {
 		}
 	}
   }
-  else if(digitalRead(lidCloseButtonPin)==HIGH){ //lokket kjører ned så lenge kanppen er inne
+  else if(digitalRead(lidCloseButtonPin)==HIGH && !motionDetected){ //lokket kjører ned så lenge kanppen er inne
     Serial.println("Close lid");
     openFlag = 0; //siden luken har gått ned er den ikke åpen lengre
     if(current > 0.45){ //hvis luken er på bunnen skal den gi ekstra gass for å trykke ned lokket
@@ -103,4 +118,10 @@ void loop() {
 	  vakuumDoneFlag = 1;
   }
   delay(10); //for debouncing
+
+  if(digitalRead(pirSensorPin) == HIGH) { // Hvis pirsensor ikke detekterer bevegelse på 20 sekunder, kan systemet starte igjen
+  	Serial.println("Motion Detected, system shut down for 20 seconds");
+  	motionTimer = millis();
+  	motionDetected = 1;
+  }
 }
