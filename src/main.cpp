@@ -22,8 +22,6 @@ int vCurrentPeakFlag = 0;
 int vakuumDoneFlag = 0;
 int vakuumMotorRunningFlag = 0;
 
-int pirSensorPin = 2;
-int motionDetected = 0;
 
 Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp et objekt for pumpen
 Hbro lukeMotorer(lukeForPWMPin, lukeBackPWMPin, 0, 0); //setter opp et objekt for luken, her blir begge motorene kjørt i paralell
