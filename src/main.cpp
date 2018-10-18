@@ -46,7 +46,7 @@ void setup() {
 
 void loop() {
   Serial.println("Start of loop");
-  if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag && 1 == 0){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
+  if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
     Serial.println("Pump on");
     vakuumMotor.setSpeed(1,250);
 	vakuumMotorRunningFlag = 1; // Indikerer at vakuum-motoren er på
