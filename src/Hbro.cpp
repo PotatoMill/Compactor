@@ -1,4 +1,6 @@
+#include <Arduino.h>
 #include "Hbro.h"
+
 
 Hbro::Hbro(){} //default constructor
 Hbro::Hbro(int forPWMPin, int backPWMPin, int forEnablePin, int backEnablePin):
@@ -9,9 +11,11 @@ Hbro::Hbro(int forPWMPin, int backPWMPin, int forEnablePin, int backEnablePin):
     backEnablePin(backEnablePin),
     speed(0),
     direction(1),
+	oldTime{micros()},
+	timeInterval{0},
     rampTime(5){}
 
-void Hbro::setSpeed(bool newDirection, int newSpeed){
+void Hbro::delaySetSpeed(bool newDirection, int newSpeed){
     //hvis det er feil retning må den bremse ned først, sifte retning og øke opp til ønsket hastighet
     if(newDirection != direction){
       //reduserer hastigheten til 0
@@ -34,7 +38,7 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
     }
 
     //skifter hastigheten fra nåværende til ny hastighet
-    //hvis den nye hastighetnen er mindre må
+    //hvis den nye hastighetnen er mindre må hastigheten økes
     if(newSpeed < speed){
         while(newSpeed < speed ){
             if(debugging){Serial.println(speed);};
@@ -51,6 +55,91 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
             speedSetter();
             delay(rampTime);
         }
+    }
+}
+
+void Hbro::setSpeed(bool newDirection, int newSpeed){
+    //hvis det er feil retning må den bremse ned først, sifte retning og øke opp til ønsket hastighet
+	if(newDirection != direction || changeDirMode){ // Systemet vil gå i denne "if"en hvis retning er byttet, helt til speed = 0
+	  changeDirMode = 1;
+	  unsigned long newTime = micros();
+	  timeInterval = newTime - oldTime;
+	  if(timeInterval < 1000 && timeInterval > 0) { // Vent til timeInterval har blitt større
+	  }
+	  else if(timeInterval >= 1000 && timeInterval < 20000) {
+	  		speed -= 4;
+	  		oldTime = newTime;
+	  }
+	  else if(timeInterval <= 0) {	// Sett oldTime = newTime, men ikke juster speed. Dette er edge case når variabelen overflower
+	  	oldTime = newTime;
+	  }
+	  else if(timeInterval > 20000) {
+	  	oldTime = newTime;
+	  }
+	  speedSetter();
+	  if(speed <= 0) { // Speed er 0, og vi kan gå ut av changeDirMode
+		speed = 0;
+		speedSetter();
+		changeDirMode = 0;
+	  	direction = newDirection;
+	  	if(direction == 1){activePWMPin = forPWMPin;}
+	  	if(direction == 0){activePWMPin = backPWMPin;}
+	  	if(debugging){
+			Serial.println("Direction is now:");
+			Serial.println(direction);
+			Serial.println("ActivePWMpin is now:");
+			Serial.println(activePWMPin);
+	   }
+  	 }
+   }
+
+    Serial.println(speed);
+	if(newSpeed == this->speed || (newSpeed == 250 && this->speed>= 250)) { // Hvis speeden allerede er satt, kan vi bare gå ut med en gang
+		return;
+	}
+    if(newSpeed < speed && !changeDirMode){ // Hvis den nye speeden er mindre enn current speed, må vi redusere current speed
+        if(debugging){Serial.println(speed);};
+
+		unsigned long newTime = micros();
+		timeInterval = newTime - oldTime;
+
+		if(timeInterval < 1000 && timeInterval > 0) { // Vent til timeInterval har blitt større
+		}
+		else if(timeInterval >= 1000 && timeInterval < 20000) {
+			speed -= 4;
+			oldTime = newTime;
+		}
+		else if(timeInterval < 0) {	// Sett oldTime == newTime, men ikke juster speed. Dette er edge case når variabelen overflower
+			oldTime = newTime;
+		}
+		else if(timeInterval > 20000) {
+			oldTime = newTime;
+		}
+        speedSetter();
+		Serial.println(speed);
+    }
+    else{ // Hvis den nye speeden er større enn current speed, må vi øke current speed
+		if(changeDirMode) { // Hvis vi er i change dir mode returner vi
+			return;
+		}
+            if(debugging){Serial.println(speed);};
+
+			unsigned long newTime = micros();
+			timeInterval = newTime - oldTime;
+			if(timeInterval < 1000 && timeInterval > 0) { // Vent til timeInterval har blitt større
+			}
+			else if(timeInterval >= 1000 && timeInterval < 20000) {
+				speed += 4;
+				oldTime = newTime;
+			}
+			else if(timeInterval < 0) {	// Sett oldTime == newTime, men ikke juster speed. Dette er edge case når variabelen overflower
+				oldTime = newTime;
+			}
+			else if(timeInterval > 20000) {
+				oldTime = newTime;
+			}
+			speedSetter();
+			Serial.println(speed);
     }
 }
 
@@ -115,4 +204,9 @@ void Hbro::disableDebugging(){debugging = false;}
 void Hbro::speedSetter(){
   if(activePWMPin == 0 && debugging == true){Serial.println("Error: activePWMPin is zero");}
   else{analogWrite(activePWMPin, speed);}
+}
+
+// Below is for fixing delay
+int Hbro::getSpeed() const {
+	return this->speed;
 }

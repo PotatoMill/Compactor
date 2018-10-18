@@ -9,7 +9,7 @@ public:
   Hbro(); //default constructor
   Hbro(int forPWMPin, int backPWMPin, int forEnablePin, int backEnablePin); //constructor setting up pins
 
-  void setSpeed(bool direction, int speed); //1 is forwards 0 is bakwards. Speed range from 0 to 255. Ramping speed,
+  void delaySetSpeed(bool direction, int speed); //1 is forwards 0 is bakwards. Speed range from 0 to 255. Ramping speed,
   //nb! top speed might not work
   void smoothStop(); //ramp stopping 5 times faster than the ramp time
   void stop(); //sudden stop, can be bad for the system
@@ -29,6 +29,10 @@ public:
   void enableDebugging();
   void disableDebugging();
 
+  // For fixing the delay
+  int getSpeed() const;
+  void setSpeed(bool direction, int speed);
+
 private:
   void speedSetter(); //setter hastighet og passer på at revers også har motsatt PWM verdier
 
@@ -41,6 +45,11 @@ private:
   bool direction; //1 is forwards 0 is backwards
   int rampTime; //time to ramp to set speed
   bool debugging; //1 to enable debugging
+
+  // For fixing delay
+  unsigned long oldTime;
+  unsigned long timeInterval;
+  int changeDirMode;
 };
 
 #endif
