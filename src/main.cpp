@@ -22,6 +22,9 @@ int vCurrentPeakFlag = 0;
 int vakuumDoneFlag = 0;
 int vakuumMotorRunningFlag = 0;
 
+int pirSensorPin = 2;
+int motionDetected = 0;
+
 Hbro vakuumMotor(pumpPWMPin , 0, pumpEnablePin, 14); //setter opp et objekt for pumpen
 Hbro lukeMotorer(lukeForPWMPin, lukeBackPWMPin, 0, 0); //setter opp et objekt for luken, her blir begge motorene kjørt i paralell
 CurrentSensor30A lukeCurrent(currentSensorPin);
@@ -46,7 +49,7 @@ void setup() {
 
 void loop() {
   Serial.println("Start of loop");
-  if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag && 1 == 0){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
+  if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
     Serial.println("Pump on");
     vakuumMotor.setSpeed(1,250);
 	vakuumMotorRunningFlag = 1; // Indikerer at vakuum-motoren er på
