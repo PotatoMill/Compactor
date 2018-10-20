@@ -67,20 +67,27 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
 	  if(timeInterval < 1000 && timeInterval > 0) { // Vent til timeInterval har blitt større
 	  }
 	  else if(timeInterval >= 1000 && timeInterval < 20000) {
-	  		speed -= 4;
+		  	int speedChange = timeInterval / 1000; // new change in speed
+			if(speedChange > 8) { // If the change in speed is too big, now set to 8
+				speedChange = 8;
+			}
+			speed -= speedChange;
+			if(speed < 0) { // If the speed in speed change mode have fallen below 0 due to speed decrements
+				speed = 0;
+			}
 	  		oldTime = newTime;
 	  }
 	  else if(timeInterval <= 0) {	// Sett oldTime = newTime, men ikke juster speed. Dette er edge case når variabelen overflower
 	  	oldTime = newTime;
 	  }
-	  else if(timeInterval > 20000) {
+	  else if(timeInterval > 20000) { // If something have happened so that the time interval is too big
 	  	oldTime = newTime;
 	  }
 	  speedSetter();
 	  if(speed <= 0) { // Speed er 0, og vi kan gå ut av changeDirMode
-		speed = 0;
+		speed = 0;	// Reduntant set to 0 if we are 0 or below
 		speedSetter();
-		changeDirMode = 0;
+		changeDirMode = 0; // Can now exit changeDirMode
 	  	direction = newDirection;
 	  	if(direction == 1){activePWMPin = forPWMPin;}
 	  	if(direction == 0){activePWMPin = backPWMPin;}
@@ -92,9 +99,10 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
 	   }
   	 }
    }
-
-    Serial.println(speed);
-	if(newSpeed == this->speed || (newSpeed == 250 && this->speed>= 250)) { // Hvis speeden allerede er satt, kan vi bare gå ut med en gang
+	// Hvis speeden allerede er satt, kan vi bare gå ut med en gang. Andre del etter else kan nok fjernes, men er et ekstra sikkerhetsnett. bytt ut 250 med max speed.
+	// Kanskje legge en member variable til istedenfor 250.
+	if(newSpeed == this->speed || (newSpeed == 250 && this->speed>= 250)) {
+		Serial.println("In return statement");
 		return;
 	}
     if(newSpeed < speed && !changeDirMode){ // Hvis den nye speeden er mindre enn current speed, må vi redusere current speed
@@ -106,7 +114,14 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
 		if(timeInterval < 1000 && timeInterval > 0) { // Vent til timeInterval har blitt større
 		}
 		else if(timeInterval >= 1000 && timeInterval < 20000) {
-			speed -= 4;
+			int speedChange = timeInterval / 1000;
+			if(speedChange > 8) {
+				speedChange = 8;
+			}
+			speed -= speedChange;
+			if(speed < newSpeed) { // Hvis vi minsker fart, og speed faller under newSpeed, så set speed til newSpeed
+				speed = newSpeed;
+			}
 			oldTime = newTime;
 		}
 		else if(timeInterval < 0) {	// Sett oldTime == newTime, men ikke juster speed. Dette er edge case når variabelen overflower
@@ -129,7 +144,14 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
 			if(timeInterval < 1000 && timeInterval > 0) { // Vent til timeInterval har blitt større
 			}
 			else if(timeInterval >= 1000 && timeInterval < 20000) {
-				speed += 4;
+				int speedChange = timeInterval / 1000;
+				if (speedChange > 8) {
+					speedChange = 8;
+				}
+				speed += speedChange;
+				if (speed > newSpeed) { // Hvis vi øker farten, og speed går over newSpeed, set speed = newSpeed
+					speed = newSpeed;
+				}
 				oldTime = newTime;
 			}
 			else if(timeInterval < 0) {	// Sett oldTime == newTime, men ikke juster speed. Dette er edge case når variabelen overflower
