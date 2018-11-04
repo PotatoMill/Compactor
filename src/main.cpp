@@ -46,10 +46,13 @@ void setup() {
 
 
 void loop() {
-  Serial.println("Start of loop");
+  // Serial.println("Start of loop");
   if(digitalRead(pumpButtonPin) == HIGH && !vakuumDoneFlag){ //hvis knappen for pumpen er inne skal den på, med mindre vakuum er ferdig
-    Serial.println("Pump on");
+    // Serial.println("Pump on");
     vakuumMotor.setSpeed(1,250);
+	if(vakuumMotorRunningFlag == 0) {
+		Serial.println("Timing started");
+	}
 	vakuumMotorRunningFlag = 1; // Indikerer at vakuum-motoren er på
   }
   else if(vakuumMotor.getSpeed() != 0){
@@ -61,24 +64,24 @@ void loop() {
   }
 
   if(digitalRead(lidOpenButtonPin)==HIGH){ //lokket kjører opp så lenge knappen er inne og den ikke er på toppen
-    Serial.println("Open lid");
-    if(current < 0.80 && openFlag == 0){ //lokket går bare opp hvis det ikke er oppe fra før eller det spenningen øker fra at det har nådd toppen
-      lukeMotorer.setSpeed(0,250);
+    // Serial.println("Open lid");
+	    if(current < 0.70 && openFlag == 0){ //lokket går bare opp hvis det ikke er oppe fra før eller det spenningen øker fra at det har nådd toppen
+      	lukeMotorer.setSpeed(0,250);
     }
     else{
         lukeMotorer.setSpeed(0, 0);
+		openFlag = 1; //flagge er satt til 1 for å vise at lokket er oppe
 		if(lukeMotorer.getSpeed() == 0) {
-        	openFlag = 1; //flagge er satt til 1 for å vise at lokket er oppe
 			vakuumDoneFlag = 0; // Lokket er oppe, derfor kan vakuum startes igjen
 		}
 	}
   }
   else if(digitalRead(lidCloseButtonPin)==HIGH){ //lokket kjører ned så lenge kanppen er inne
-    Serial.println("Close lid");
+    // Serial.println("Close lid");
     openFlag = 0; //siden luken har gått ned er den ikke åpen lengre
     if(current > 0.45){ //hvis luken er på bunnen skal den gi ekstra gass for å trykke ned lokket
       lukeMotorer.setSpeed(1,250);
-      Serial.println("Boost!");
+      // Serial.println("Boost!");
     }
     else{
         lukeMotorer.setSpeed(1, 100); //vanlig lukking
@@ -87,21 +90,22 @@ void loop() {
   }
   else if (lukeMotorer.getSpeed() != 0){
     //Serial.println("neutral");
-	Serial.println("Speed set to 0");
+	// Serial.println("Speed set to 0");
     lukeMotorer.setSpeed(0,0);
   }
   //Serial.print("Voltage: ");
   current = 0.95*current + 0.05*lukeCurrent.getCurrent();
-  vCurrent = 0.95*vCurrent + 0.05*vakuumCurrent.getCurrent();
+  vCurrent = 0.99*vCurrent + 0.01*vakuumCurrent.getCurrent();
 
-  if(abs(vCurrent) > 1.45 && !vCurrentPeakFlag && vakuumMotorRunningFlag) { // Hvis strømmen for vakuum peaker
+  if(abs(vCurrent) > 8 && !vCurrentPeakFlag && vakuumMotorRunningFlag) { // Hvis strømmen for vakuum peaker
 	  vCurrentPeakFlag = 1;
   }
   if(!vakuumMotorRunningFlag) { // Hvis ikke motoren er på, skal peaken resettes
 	  vCurrentPeakFlag = 0;
   }
-  if(abs(vCurrent) < 1.30 && vCurrentPeakFlag) { // Hvis strømmen har falt etter den har peaket.
+  if(abs(vCurrent) < 2.10 && vCurrentPeakFlag) { // Hvis strømmen har falt etter den har peaket.
 	  vakuumDoneFlag = 1;
   }
+
   delay(10); //for debouncing
 }
