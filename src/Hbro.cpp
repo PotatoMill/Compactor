@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "Hbro.h"
-
+#include "common.hpp"
 
 Hbro::Hbro(){} //default constructor
 Hbro::Hbro(int forPWMPin, int backPWMPin, int forEnablePin, int backEnablePin):
@@ -101,8 +101,8 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
    }
 	// Hvis speeden allerede er satt, kan vi bare gå ut med en gang. Andre del etter else kan nok fjernes, men er et ekstra sikkerhetsnett. bytt ut 250 med max speed.
 	// Kanskje legge en member variable til istedenfor 250.
-	if(newSpeed == this->speed || (newSpeed == 250 && this->speed>= 250)) {
-		// Serial.println("In return statement");
+	Serial.println(this->speed);
+	if(newSpeed == this->speed || (newSpeed > 0 && this->speed >= newSpeed)) {
 		return;
 	}
     if(newSpeed < speed && !changeDirMode){ // Hvis den nye speeden er mindre enn current speed, må vi redusere current speed
@@ -131,7 +131,6 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
 			oldTime = newTime;
 		}
         speedSetter();
-		// Serial.println(speed);
     }
     else{ // Hvis den nye speeden er større enn current speed, må vi øke current speed
 		if(changeDirMode) { // Hvis vi er i change dir mode returner vi

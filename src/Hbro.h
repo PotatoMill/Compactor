@@ -1,3 +1,4 @@
+#pragma once
 #ifndef ds
 #define ds
 
