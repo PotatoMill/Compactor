@@ -76,44 +76,41 @@ void setup() {
 	distanceSensor.setTimeout(500);	// Timeout for reading a fullness sensor value
 	distanceSensor.startContinuous();
 
-
 	startupRoutine();
 
 }
-
 
 void loop() {
 	// Button Override Routine
 	int buttonOverrideResult = buttonOverride();
 
 	if (buttonOverrideResult == 2) {
-		//TODO: This section  within the if isn't properly implemented, need to test when writing
-		int movement = checkForMovement(1);
-		if (movement) {
-			movementRoutine();
-			vacuumState = Off;
-			lidState = Open;
-		}
-		else {
-			unsigned long lastMovementTimeInterval = millis() - lastMovementTime;
-			if (lastMovementTimeInterval > longCompressTimeInterval_ms) {
-				noMovementRoutine();
-			}
-			else {
-				vacuumState = Off;
-				lidState = Open;
-			}
-		}
+		// //TODO: This section  within the if isn't properly implemented, need to test when writing
+		// int movement = checkForMovement(1);
+		// if (movement) {
+		// 	movementRoutine();
+		// 	vacuumState = Off;
+		// 	lidState = Open;
+		// }
+		// else {
+		// 	unsigned long lastMovementTimeInterval = millis() - lastMovementTime;
+		// 	if (lastMovementTimeInterval > longCompressTimeInterval_ms) {
+		// 		noMovementRoutine();
+		// 	}
+		// 	else {
+		// 		vacuumState = Off;
+		// 		lidState = Open;
+		// 	}
+		// }
 	}
 
-	// Lid State Routine
 	lidStateRoutine();
 
-	// Pump State Routine
 	pumpStateRoutine();
+
 
 	displayFullness();
 
 
-	delay(10);
+	// delay(10);
 }

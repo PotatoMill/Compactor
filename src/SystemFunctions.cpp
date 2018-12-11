@@ -18,9 +18,9 @@ void startupRoutine() {
 }
 
 /*
-* buttonOverride() - A function that checks the button mode, either automatic or manual.
-*					Manual mode acts according to what button is pressed at the time.
-*					Automatic enters a "mode" based on what button is pressed once, and acts out the command.
+* buttonOverride() - A function that checks the current button mode, either automatic or manual.
+*					 Manual mode acts according to what button is pressed at the time.
+*					 Automatic enters a "mode" based on what button is pressed once, and acts out the command.
 *
 * Return: TODO: Not completely sure of the exact reason why it should return 1 or 2.
 * TODO: Implement automatic section
@@ -72,7 +72,8 @@ int buttonOverride() {
 }
 
 /*
-* lidStateRoutine() - Function that checks the lid state, and issues command to the motor. It can also change the state, e.g. if lidTopSensor is true.
+* lidStateRoutine() - Function that checks the current lid state, and issues command to the motor.
+*					  It can also change the state, e.g. if lidTopSensor is true.
 */
 void lidStateRoutine() {
 	if (lidState == Stop) {
@@ -111,6 +112,7 @@ void lidStateRoutine() {
 
 /*
 * pumpStateRoutine() - Function that checks the vacuum pump state, and issues command to the motor.
+*					   If the vacuum process is done, it stops the compression and opens the lid.
 * TODO: Find out how to signal vacuumDoneFlag
 */
 void pumpStateRoutine() {
@@ -133,7 +135,11 @@ void pumpStateRoutine() {
 	}
 }
 
-
+/*
+* movementRoutine() - Function that is called when movement is detected in the system.
+*					  If a compression is currently active, it should interrupt it and
+					  save that the compression was interrupted.
+*/
 void movementRoutine() {
 	lastMovementTime = millis();
 	if (vacuumState == On) {
@@ -141,6 +147,10 @@ void movementRoutine() {
 	}
 }
 
+/*
+* noMovementRoutine() - Function that is called when no movement is detected in they system.
+* 						Should check if compression is needed.
+*/
 void noMovementRoutine() {
 	uint16_t distanceFromSensor = readFullnessLevel(1);
 	if (distanceFromSensor < fullnessThreshold) { // If the bin is full
@@ -154,7 +164,7 @@ void noMovementRoutine() {
 }
 
 /*
-* readFullnessLevel() - Function for reading the fullness level
+* readFullnessLevel() - Function for reading the fullness level of the bin.
 *
 * @arg1: How many readings to do in order to find a correct sensor value
 * Return: The filtered sensor value
@@ -168,11 +178,12 @@ uint16_t readFullnessLevel(int numReadings) {
 }
 
 /*
-* displayFullness() - Function that checks the bin fullness, and saves the state. The fullness is logged every 10'th minute
+* displayFullness() - Function that checks the bin fullness, and saves the current fullness state of the system.
+*					  The fullness should be logged every 10 minutes.
 */
 void displayFullness() {
-	if (digitalRead(lidTopSensor)) { // Checks if the lid is open, if not then it exits immediately
-		uint16_t distanceFromSensor = readFullnessLevel(5);
+	if (digitalRead(lidTopSensor) && vacuumState == Off) { // Checks if the lid is open, if not then it exits immediately
+		uint16_t distanceFromSensor = readFullnessLevel(3);
 		if (distanceFromSensor > 5000) {
 			//TODO: Sensor value too high, do something because of this?
 		}
@@ -180,7 +191,6 @@ void displayFullness() {
 		//TODO: About the logging, are we going to use a SD card or something?
 	}
 }
-
 /*
 * checkForMovement() - Function that reads the pir sensor(s) for movement
 * @arg1: Time inteval the system should look for movement (in ms).
