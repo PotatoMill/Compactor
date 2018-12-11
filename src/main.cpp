@@ -85,23 +85,23 @@ void loop() {
 	int buttonOverrideResult = buttonOverride();
 
 	if (buttonOverrideResult == 2) {
-		// //TODO: This section  within the if isn't properly implemented, need to test when writing
-		// int movement = checkForMovement(1);
-		// if (movement) {
-		// 	movementRoutine();
-		// 	vacuumState = Off;
-		// 	lidState = Open;
-		// }
-		// else {
-		// 	unsigned long lastMovementTimeInterval = millis() - lastMovementTime;
-		// 	if (lastMovementTimeInterval > longCompressTimeInterval_ms) {
-		// 		noMovementRoutine();
-		// 	}
-		// 	else {
-		// 		vacuumState = Off;
-		// 		lidState = Open;
-		// 	}
-		// }
+		//TODO: This section  within the if isn't properly implemented, need to test
+		int movement = checkForMovement(1);
+		if (movement) {
+			movementRoutine();
+			vacuumState = Off;
+			lidState = Open;
+		}
+		else {
+			unsigned long lastMovementTimeInterval = millis() - lastMovementTime;
+			if (lastMovementTimeInterval > longCompressTimeInterval_ms) {
+				noMovementRoutine();
+			}
+			else {
+				vacuumState = Off;
+				lidState = Open;
+			}
+		}
 	}
 
 	lidStateRoutine();
@@ -109,8 +109,8 @@ void loop() {
 	pumpStateRoutine();
 
 
-	displayFullness();
+	displayFullness(); // Distance measurement messes up the lid timing, shouldn't be an issue in the real system, because it will only measure when lidAtTop is true
 
 
-	// delay(10);
+	delay(10);
 }

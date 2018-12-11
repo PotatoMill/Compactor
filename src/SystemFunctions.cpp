@@ -65,9 +65,8 @@ int buttonOverride() {
 		}
 	}
 	else {
-		//TODO: Implement automatic version
+		//TODO: Implement automatic version here
 	}
-
 	return 1;
 }
 
@@ -138,7 +137,7 @@ void pumpStateRoutine() {
 /*
 * movementRoutine() - Function that is called when movement is detected in the system.
 *					  If a compression is currently active, it should interrupt it and
-					  save that the compression was interrupted.
+*					  save that the compression was interrupted.
 */
 void movementRoutine() {
 	lastMovementTime = millis();
@@ -182,7 +181,7 @@ uint16_t readFullnessLevel(int numReadings) {
 *					  The fullness should be logged every 10 minutes.
 */
 void displayFullness() {
-	if (digitalRead(lidTopSensor) && vacuumState == Off) { // Checks if the lid is open, if not then it exits immediately
+	if (digitalRead(lidTopSensor)) { // Checks if the lid is open, if not then it exits immediately
 		uint16_t distanceFromSensor = readFullnessLevel(3);
 		if (distanceFromSensor > 5000) {
 			//TODO: Sensor value too high, do something because of this?
@@ -191,6 +190,7 @@ void displayFullness() {
 		//TODO: About the logging, are we going to use a SD card or something?
 	}
 }
+
 /*
 * checkForMovement() - Function that reads the pir sensor(s) for movement
 * @arg1: Time inteval the system should look for movement (in ms).
