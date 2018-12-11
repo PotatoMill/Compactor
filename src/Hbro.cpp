@@ -101,7 +101,6 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
    }
 	// Hvis speeden allerede er satt, kan vi bare gå ut med en gang. Andre del etter else kan nok fjernes, men er et ekstra sikkerhetsnett. bytt ut 250 med max speed.
 	// Kanskje legge en member variable til istedenfor 250.
-	Serial.println(this->speed);
 	if(newSpeed == this->speed || (newSpeed > 0 && this->speed >= newSpeed)) {
 		return;
 	}

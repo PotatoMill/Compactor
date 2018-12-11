@@ -27,10 +27,10 @@ void startupRoutine() {
 */
 int buttonOverride() {
 	// TODO: Figure out what should indicate if it is in manual mode, right now, if any button is pressed, it goes into manual mode.'
-	Serial.println("In buttonOverride");
+	// TODO: Find out if the pump should be turned off when exiting in the last else
 
 	if (buttonMode == Manual) {
-		if (digitalRead(lidOpenButtonPin && lidCloseButtonPin)) { // If both the buttons are pressed
+		if (digitalRead(lidOpenButtonPin) && digitalRead(lidCloseButtonPin)) { // If both the buttons are pressed
 			if(digitalRead(pumpButtonPin))
 				vacuumState = On;
 			else
@@ -59,7 +59,7 @@ int buttonOverride() {
 				return 1;
 			}
 			else {
-				lidState = Stop; // Think there is an error in the state diagram, if the diagram is to be strictly followed, then this should not happen
+				lidState = Stop; // Think there is an error in the state diagram, becasue the lidState should not be changed if diagram is followed strictly
 				return 2;
 			}
 		}
@@ -79,7 +79,7 @@ void lidStateRoutine() {
 		lukeMotorer.setSpeed(0, 0);
 	}
 	else if (lidState == Open) {
-		if (analogRead(lidTopSensor)) {
+		if (1 == 0) { // if (digitalRead(lidTopSensor)) { TODO: Replace the first if with the second when top sensor implemented
 			lidState = Stop;
 			lukeMotorer.setSpeed(0, 0);
 		}
@@ -109,12 +109,16 @@ void lidStateRoutine() {
 	}
 }
 
+/*
+* pumpStateRoutine() - Function that checks the vacuum pump state, and issues command to the motor.
+* TODO: Find out how to signal vacuumDoneFlag
+*/
 void pumpStateRoutine() {
 	if (vacuumState == Off) {
 		vacuumMotor.setSpeed(1, 0);
 	}
 	else {
-		if (analogRead(lidBottomSensor)) {
+		if (digitalRead(lidBottomSensor)) {
 			if (vacuumDoneFlag) {
 				lidState = Open;
 				vacuumState = Off;
@@ -127,4 +131,69 @@ void pumpStateRoutine() {
 			}
 		}
 	}
+}
+
+
+void movementRoutine() {
+	lastMovementTime = millis();
+	if (vacuumState == On) {
+		//TODO: Save to some kind of log that the vacuum process was interrupted
+	}
+}
+
+void noMovementRoutine() {
+	uint16_t distanceFromSensor = readFullnessLevel(1);
+	if (distanceFromSensor < fullnessThreshold) { // If the bin is full
+		//TODO: Implement difference between fullAndCantCompressMore and fullNeedsCompress
+		//TODO: Implement automatic compression
+	}
+	else {
+		vacuumState = Off;
+		lidState = Open;
+	}
+}
+
+/*
+* readFullnessLevel() - Function for reading the fullness level
+*
+* @arg1: How many readings to do in order to find a correct sensor value
+* Return: The filtered sensor value
+*/
+uint16_t readFullnessLevel(int numReadings) {
+	uint16_t sensorValue = distanceSensor.readRangeContinuousMillimeters();
+	for (int i = 0; i < numReadings; i++) {
+		sensorValue = 0.9 * sensorValue + 0.1 * distanceSensor.readRangeContinuousMillimeters();
+	}
+	return sensorValue;
+}
+
+/*
+* displayFullness() - Function that checks the bin fullness, and saves the state. The fullness is logged every 10'th minute
+*/
+void displayFullness() {
+	if (digitalRead(lidTopSensor)) { // Checks if the lid is open, if not then it exits immediately
+		uint16_t distanceFromSensor = readFullnessLevel(5);
+		if (distanceFromSensor > 5000) {
+			//TODO: Sensor value too high, do something because of this?
+		}
+		//TODO: fulnessIndicator = distanceFromSensor; // In some kind of way
+		//TODO: About the logging, are we going to use a SD card or something?
+	}
+}
+
+/*
+* checkForMovement() - Function that reads the pir sensor(s) for movement
+* @arg1: Time inteval the system should look for movement (in ms).
+* Return: 1 for movement, 0 for no movement
+*/
+int checkForMovement(unsigned long timeIntervalms) {
+	unsigned long movementSenseDuration = 0;
+	unsigned long startMovementSens = millis();
+	while (timeIntervalms > movementSenseDuration) {
+		if (digitalRead(pirSensorPin)) { // Checks if movement is detected
+			return 1;
+		}
+		movementSenseDuration = millis() - startMovementSens;
+	}
+	return 0;
 }

@@ -48,6 +48,8 @@ extern int vacuumMotorRunningFlag;
 extern unsigned long timeVacuumStart;
 extern int vacuumTimingStarted;
 
+extern int pirSensorPin;
+
 
 // Extern variables for the new state machine, defined in main.cpp
 extern FullnessLevel fullnessLevel; 				// Current fullness level of the bin
@@ -61,23 +63,29 @@ extern unsigned long lastCompressTime;				// Time since last compression
 extern unsigned long longCompressTimeInterval_ms;	// Long time interval for compression
 extern unsigned long shortCompressTImeInterval_ms;	// Short time interval for compression
 
-
 // Lid top or bottom sensors
 extern int lidTopSensor;
 extern int lidBottomSensor;
 extern int lidAtTop;
 extern int lidAtBotton;
-extern int usualForceThreshold; // Set to some value that represents if some force threshold is reached
 
+extern int usualForceThreshold;		 // Set to some value that represents if some force threshold is reached
+extern uint16_t fullnessThreshold;   // Set to some value that indicates when the bin is full
 
 // Extern objects, defined in main.cpp
 extern Hbro vacuumMotor; //setter opp et objekt for pumpen
 extern Hbro lukeMotorer; //setter opp et objekt for luken, her blir begge motorene kjørt i paralell
 extern CurrentSensor30A lukeCurrent;
 extern CurrentSensor30A vacuumCurrent;
+extern VL53L0X distanceSensor;
 
 // Extern functions, implementation in SystemFunctions.cpp
 void startupRoutine(); 	// The systems startup routine
 int buttonOverride();
 void lidStateRoutine();
 void pumpStateRoutine();
+void movementRoutine();
+void noMovementRoutine();
+void displayFullness();
+uint16_t readFullnessLevel(int numReadings); // Function for reading bin fullness
+int checkForMovement(unsigned long timeIntervalms); // Checks if there is movement in the room
