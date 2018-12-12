@@ -14,7 +14,7 @@ void startupRoutine() {
 	lastCompressTime = longCompressTimeInterval_ms;
 	vacuumState = Off;
 	lidState = Stop;
-	buttonMode = Manual; // TODO: Put into manual for now, is this correct?
+	buttonMode = Manual; // TODO: Put into manual for now, is this correct? Yes yes
 }
 
 /*
@@ -30,39 +30,24 @@ int buttonOverride() {
 	// TODO: Find out if the pump should be turned off when exiting in the last else
 
 	if (buttonMode == Manual) {
-		if (digitalRead(lidOpenButtonPin) && digitalRead(lidCloseButtonPin)) { // If both the buttons are pressed
-			if(digitalRead(pumpButtonPin))
-				vacuumState = On;
-			else
-				vacuumState = Off;
-			return 1;
-		}
-		else if (digitalRead(lidOpenButtonPin)) { // If the lid open button is pressed
-			lidState = Open;
-			if (digitalRead(pumpButtonPin))
-				vacuumState = On;
-			else
-				vacuumState = Off;
-			return 1;
-		}
-		else if (digitalRead(lidCloseButtonPin)) { // If the lid close button is pressed
-			lidState = Close;
-			if (digitalRead(pumpButtonPin))
-				vacuumState = On;
-			else
-				vacuumState = Off;
-		}
-		else {	// When none of the buttons are pressed
-			if (digitalRead(pumpButtonPin)) {
-				lidState = Stop;
+		if (!digitalRead(lidOpenButtonPin) && !digitalRead(lidCloseButtonPin)) { //If no buttons are pressed
+			lidState = Stop;
+			if(digitalRead(pumpButtonPin)){
 				vacuumState = On;
 				return 1;
 			}
 			else {
-				lidState = Stop; // Think there is an error in the state diagram, becasue the lidState should not be changed if diagram is followed strictly
+				vacuumState = Off;
 				return 2;
 			}
 		}
+		else if (digitalRead(lidOpenButtonPin))  { lidState = Open;  } 	// If the lid open button is pressed
+		else if (digitalRead(lidCloseButtonPin)) { lidState = Close; } 	// If the lid close button is pressed
+																		// When both of the buttons are pressed it gose to next
+
+		vacuumState = digitalRead(pumpButtonPin)) ? On : Off; //checking if vacuum button is pressed
+		return 1;
+
 	}
 	else {
 		//TODO: Implement automatic version here
