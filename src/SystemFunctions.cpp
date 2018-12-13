@@ -32,20 +32,24 @@ int buttonOverride() {
 	if (buttonMode == Manual) {
 		if (!digitalRead(lidOpenButtonPin) && !digitalRead(lidCloseButtonPin)) { //If no buttons are pressed
 			lidState = Stop;
+			Serial.print("no buttons ");
 			if(digitalRead(pumpButtonPin)){
 				vacuumState = On;
+				Serial.print("vacuum on ");
 				return 1;
 			}
 			else {
 				vacuumState = Off;
+				Serial.print("vacuum off");
 				return 2;
 			}
 		}
-		else if (digitalRead(lidOpenButtonPin))  { lidState = Open;  } 	// If the lid open button is pressed
-		else if (digitalRead(lidCloseButtonPin)) { lidState = Close; } 	// If the lid close button is pressed
+		else if (digitalRead(lidOpenButtonPin))  { lidState = Open; Serial.print("open ");  } 	// If the lid open button is pressed
+		else if (digitalRead(lidCloseButtonPin)) { lidState = Close; Serial.print("close "); } 	// If the lid close button is pressed
 																		// When both of the buttons are pressed it gose to next
 
-		vacuumState = digitalRead(pumpButtonPin)) ? On : Off; //checking if vacuum button is pressed
+		if(digitalRead(pumpButtonPin)){ vacuumState=On; Serial.print("vacuum on ");} //Vacuum button on
+		else { vacuumState=Off; Serial.print("vacuum off ");}                        //Vacuum button off
 		return 1;
 
 	}
@@ -61,35 +65,39 @@ int buttonOverride() {
 */
 void lidStateRoutine() {
 	if (lidState == Stop) {
-		lukeMotorer.setSpeed(0, 0);
+		lukeMotorer.setSpeed( 0, 0);
 	}
 	else if (lidState == Open) {
-		if (1 == 0) { // if (digitalRead(lidTopSensor)) { TODO: Replace the first if with the second when top sensor implemented
+		if (digitalRead(lidTopSensor)) { // if (digitalRead(lidTopSensor)) { TODO: Replace the first if with the second when top sensor implemented
+			Serial.print("Stop at top ");
 			lidState = Stop;
 			lukeMotorer.setSpeed(0, 0);
 		}
 		else {
-			if (current < usualForceThreshold) { // TODO: Find out how to know if usualForceThreshold is reached
-				lidState = Stop;
-				lukeMotorer.setSpeed(0, 0);
-			}
-			else {
-				lukeMotorer.setSpeed(0, 150);
-			}
+			//if (current < usualForceThreshold) { // TODO: Find out how to know if usualForceThreshold is reached
+			//	lidState = Stop;
+			//	lukeMotorer.setSpeed(0, 0);
+			//}
+			//else {
+			//	lukeMotorer.setSpeed(0, 150);
+			//}
+			lukeMotorer.setSpeed(0, 150);
 		}
 	}
 	else if (lidState == Close) {
-		if (lidAtBotton) {
+		if (digitalRead(lidBottomSensor)) { //lidatbottom()
+			Serial.print(" Boost ");
 			lukeMotorer.setSpeed(1, 250);
 		}
 		else {
-			if (current < usualForceThreshold) { // TODO: Find out how to know if usualForceThreshold is reached
-				lidState = Stop;
-				lukeMotorer.setSpeed(0, 0);
-			}
-			else {
-				lukeMotorer.setSpeed(1, 150);
-			}
+			//if (current < usualForceThreshold) { // TODO: Find out how to know if usualForceThreshold is reached
+			//	lidState = Stop;
+			//	lukeMotorer.setSpeed(0, 0);
+			//}
+			//else {
+			//	lukeMotorer.setSpeed(1, 150);
+			//}
+			lukeMotorer.setSpeed(1, 150);
 		}
 	}
 }
@@ -106,16 +114,18 @@ void pumpStateRoutine() {
 	else {
 		if (digitalRead(lidBottomSensor)) {
 			if (vacuumDoneFlag) {
+				Serial.print("vacuum done ");
 				lidState = Open;
 				vacuumState = Off;
 				lastCompressTime = millis();
 				vacuumMotor.setSpeed(1, 0);
 			}
 			else {
-				vacuumState = On;
+				Serial.print("vacuum begin ");
 				vacuumMotor.setSpeed(1, 250);
 			}
 		}
+		else{ vacuumMotor.setSpeed(1, 0);}
 	}
 }
 

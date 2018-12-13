@@ -44,8 +44,8 @@ VacuumState vacuumState;
 ButtonMode buttonMode;
 
 // Lid top or bottom sensors and values
-int lidTopSensor; 	// TODO: Figure out pin for this sensor
-int lidBottomSensor;	// TODO: Figure out pin for this sensor
+int lidTopSensor = 3; 	// TODO: Figure out pin for this sensor
+int lidBottomSensor = 2;	// TODO: Figure out pin for this sensor
 int lidAtTop = 0;		// Not sure if we need this variable
 int lidAtBotton = 0;	// Not sure if we need this variable
 
@@ -61,22 +61,32 @@ uint16_t fullnessThreshold = 150;	// If the distance to the bin is below this th
 void setup() {
 	Serial.begin(9600);
   	vacuumMotor.setupFuction(); //setter inputs og outputs
+	Serial.println("Vacuum motor setup complete");
   	// vacuumMotor.enableDebugging(); //skriver info til konsoll så man kan overvåke
   	lukeMotorer.setupFuction(); //setter inputs og outputs
+	Serial.println("Luke motor setup complete");
   	// lukeMotorer.enableDebugging(); //skriver info til konsoll så man kan overvåke
 
   	pinMode(pumpButtonPin, INPUT); //tar inn signal fra knapp. 5V er høy 0V er lav
   	pinMode(lidOpenButtonPin, INPUT); //tar inn signal fra knapp. 5V er høy 0V er lav
   	pinMode(lidCloseButtonPin, INPUT); //tar inn signal fra knapp. 5V er høy 0V er lav
   	pinMode(highPin, OUTPUT); //pinne for 5V
+    pinMode(lidTopSensor, INPUT);
+    pinMode(lidBottomSensor, INPUT);
   	digitalWrite(highPin, HIGH); //pinne for 5V
 
-  	Wire.begin(); // Needed for fullness sensor
+	Serial.println("Inputs and outputs setup complete");
+
+  	/* Wire.begin(); // Needed for fullness sensor
   	distanceSensor.init();	// Initiating fullness sensor
 	distanceSensor.setTimeout(500);	// Timeout for reading a fullness sensor value
 	distanceSensor.startContinuous();
+ */
+	Serial.println("Fulness sensor setup complete");
 
 	startupRoutine();
+
+	Serial.println("Startup routine complete");
 
 }
 
@@ -90,7 +100,7 @@ void loop() {
 		if (movement) {
 			movementRoutine();
 			vacuumState = Off;
-			lidState = Open;
+			lidState = Stop; //open
 		}
 		else {
 			unsigned long lastMovementTimeInterval = millis() - lastMovementTime;
@@ -99,7 +109,7 @@ void loop() {
 			}
 			else {
 				vacuumState = Off;
-				lidState = Open;
+				lidState = Stop; //open
 			}
 		}
 	}
@@ -109,8 +119,9 @@ void loop() {
 	pumpStateRoutine();
 
 
-	displayFullness(); // Distance measurement messes up the lid timing, shouldn't be an issue in the real system, because it will only measure when lidAtTop is true
+	//displayFullness(); // Distance measurement messes up the lid timing, shouldn't be an issue in the real system, because it will only measure when lidAtTop is true
 
+	Serial.println();
 
 	delay(10);
 }

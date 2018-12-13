@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "Hbro.h"
-#include "common.hpp"
+
 
 Hbro::Hbro(){} //default constructor
 Hbro::Hbro(int forPWMPin, int backPWMPin, int forEnablePin, int backEnablePin):
@@ -67,15 +67,15 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
 	  if(timeInterval < 1000 && timeInterval > 0) { // Vent til timeInterval har blitt større
 	  }
 	  else if(timeInterval >= 1000 && timeInterval < 20000) {
-		  	int speedChange = timeInterval / 1000; // new change in speed
-			if(speedChange > 8) { // If the change in speed is too big, now set to 8
-				speedChange = 8;
-			}
-			speed -= speedChange;
-			if(speed < 0) { // If the speed in speed change mode have fallen below 0 due to speed decrements
-				speed = 0;
-			}
-	  		oldTime = newTime;
+		int speedChange = timeInterval / 1000; // new change in speed
+		if(speedChange > 8) { // If the change in speed is too big, now set to 8
+			speedChange = 8;
+		}
+		speed -= speedChange;
+		if(speed < 0) { // If the speed in speed change mode have fallen below 0 due to speed decrements
+			speed = 0;
+		}
+	  	oldTime = newTime;
 	  }
 	  else if(timeInterval <= 0) {	// Sett oldTime = newTime, men ikke juster speed. Dette er edge case når variabelen overflower
 	  	oldTime = newTime;
@@ -101,7 +101,8 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
    }
 	// Hvis speeden allerede er satt, kan vi bare gå ut med en gang. Andre del etter else kan nok fjernes, men er et ekstra sikkerhetsnett. bytt ut 250 med max speed.
 	// Kanskje legge en member variable til istedenfor 250.
-	if(newSpeed == this->speed || (newSpeed > 0 && this->speed >= newSpeed)) {
+	if(newSpeed == this->speed || (newSpeed == 250 && this->speed>= 250)) {
+		// Serial.println("In return statement");
 		return;
 	}
     if(newSpeed < speed && !changeDirMode){ // Hvis den nye speeden er mindre enn current speed, må vi redusere current speed
@@ -130,6 +131,7 @@ void Hbro::setSpeed(bool newDirection, int newSpeed){
 			oldTime = newTime;
 		}
         speedSetter();
+		// Serial.println(speed);
     }
     else{ // Hvis den nye speeden er større enn current speed, må vi øke current speed
 		if(changeDirMode) { // Hvis vi er i change dir mode returner vi
