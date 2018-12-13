@@ -40,13 +40,13 @@ int buttonOverride() {
 			}
 			else {
 				vacuumState = Off;
-				Serial.print("vacuum off");
+				Serial.print("vacuum off ");
 				return 2;
 			}
 		}
 		else if (digitalRead(lidOpenButtonPin))  { lidState = Open; Serial.print("open ");  } 	// If the lid open button is pressed
 		else if (digitalRead(lidCloseButtonPin)) { lidState = Close; Serial.print("close "); } 	// If the lid close button is pressed
-																		// When both of the buttons are pressed it gose to next
+		// When both of the buttons are pressed it gose to next
 
 		if(digitalRead(pumpButtonPin)){ vacuumState=On; Serial.print("vacuum on ");} //Vacuum button on
 		else { vacuumState=Off; Serial.print("vacuum off ");}                        //Vacuum button off
@@ -67,13 +67,13 @@ void lidStateRoutine() {
 	if (lidState == Stop) {
 		lukeMotorer.setSpeed( 0, 0);
 	}
-	else if (lidState == Open) {
-		if (digitalRead(lidTopSensor)) { // if (digitalRead(lidTopSensor)) { TODO: Replace the first if with the second when top sensor implemented
-			Serial.print("Stop at top ");
+	else if (lidState == Open) { // lid need to go to the open position
+		if (digitalRead( lidTopSensor)) { //the lid is at the top and should stop
+			Serial.print( "Stop at top ");
 			lidState = Stop;
-			lukeMotorer.setSpeed(0, 0);
+			lukeMotorer.setSpeed( 0, 0);
 		}
-		else {
+		else { //the lid has not reched the top and should continue
 			//if (current < usualForceThreshold) { // TODO: Find out how to know if usualForceThreshold is reached
 			//	lidState = Stop;
 			//	lukeMotorer.setSpeed(0, 0);
@@ -84,12 +84,12 @@ void lidStateRoutine() {
 			lukeMotorer.setSpeed(0, 150);
 		}
 	}
-	else if (lidState == Close) {
-		if (digitalRead(lidBottomSensor)) { //lidatbottom()
-			Serial.print(" Boost ");
-			lukeMotorer.setSpeed(1, 250);
+	else if (lidState == Close) { //lid need to go to the close position
+		if (digitalRead( lidBottomSensor)) { //if the lid is at the bottom boost is activated
+			Serial.print( "Boost ");
+			lukeMotorer.setSpeed( 1, 250);
 		}
-		else {
+		else { //if the lid is not at the bottom it's stil going down
 			//if (current < usualForceThreshold) { // TODO: Find out how to know if usualForceThreshold is reached
 			//	lidState = Stop;
 			//	lukeMotorer.setSpeed(0, 0);
@@ -97,7 +97,7 @@ void lidStateRoutine() {
 			//else {
 			//	lukeMotorer.setSpeed(1, 150);
 			//}
-			lukeMotorer.setSpeed(1, 150);
+			lukeMotorer.setSpeed( 1, 150);
 		}
 	}
 }
@@ -108,24 +108,24 @@ void lidStateRoutine() {
 * TODO: Find out how to signal vacuumDoneFlag
 */
 void pumpStateRoutine() {
-	if (vacuumState == Off) {
-		vacuumMotor.setSpeed(1, 0);
+	if (vacuumState == Off) { //Vacuum is sett to off
+		vacuumMotor.setSpeed( 1, 0);
 	}
-	else {
-		if (digitalRead(lidBottomSensor)) {
-			if (vacuumDoneFlag) {
-				Serial.print("vacuum done ");
+	else { //Vacuum is sett to on
+		if ( digitalRead( lidBottomSensor)) { //Lid is closed
+			if ( vacuumDoneFlag) { 	//vacuum is finished
+				Serial.print( "vacuum done ");
 				lidState = Open;
 				vacuumState = Off;
 				lastCompressTime = millis();
-				vacuumMotor.setSpeed(1, 0);
+				vacuumMotor.setSpeed( 1, 0);
 			}
-			else {
-				Serial.print("vacuum begin ");
-				vacuumMotor.setSpeed(1, 250);
+			else {					//vacuum is not finished
+				Serial.print( "vacuum begin ");
+				vacuumMotor.setSpeed( 1, 250);
 			}
 		}
-		else{ vacuumMotor.setSpeed(1, 0);}
+		else{ vacuumMotor.setSpeed( 1, 0);} //Lid is not closed
 	}
 }
 
@@ -146,10 +146,12 @@ void movementRoutine() {
 * 						Should check if compression is needed.
 */
 void noMovementRoutine() {
-	uint16_t distanceFromSensor = readFullnessLevel(1);
-	if (distanceFromSensor < fullnessThreshold) { // If the bin is full
+	//uint16_t distanceFromSensor = readFullnessLevel(1);
+	if (true){ //(distanceFromSensor < fullnessThreshold) { // If the bin is full
 		//TODO: Implement difference between fullAndCantCompressMore and fullNeedsCompress
 		//TODO: Implement automatic compression
+		vacuumState = On;
+		lidState = Close;
 	}
 	else {
 		vacuumState = Off;
@@ -196,9 +198,11 @@ int checkForMovement(unsigned long timeIntervalms) {
 	unsigned long startMovementSens = millis();
 	while (timeIntervalms > movementSenseDuration) {
 		if (digitalRead(pirSensorPin)) { // Checks if movement is detected
+			Serial.print("movement ");
 			return 1;
 		}
 		movementSenseDuration = millis() - startMovementSens;
+		Serial.print("no movement");
 	}
 	return 0;
 }
