@@ -146,8 +146,8 @@ void movementRoutine() {
 * 						Should check if compression is needed.
 */
 void noMovementRoutine() {
-	//uint16_t distanceFromSensor = readFullnessLevel(1);
-	if (true){ //(distanceFromSensor < fullnessThreshold) { // If the bin is full
+	uint16_t distanceFromSensor = readFullnessLevel(1);
+	if (distanceFromSensor < fullnessThreshold) { // If the bin is full
 		//TODO: Implement difference between fullAndCantCompressMore and fullNeedsCompress
 		//TODO: Implement automatic compression
 		vacuumState = On;
@@ -165,12 +165,13 @@ void noMovementRoutine() {
 * @arg1: How many readings to do in order to find a correct sensor value
 * Return: The filtered sensor value
 */
-uint16_t readFullnessLevel(int numReadings) {
-	uint16_t sensorValue = distanceSensor.readRangeContinuousMillimeters();
-	for (int i = 0; i < numReadings; i++) {
-		sensorValue = 0.9 * sensorValue + 0.1 * distanceSensor.readRangeContinuousMillimeters();
+int readFullnessLevel() {
+	int newReading = distanceSensor.readRangeContinuousMillimeters();
+	if(distance < 500){
+	distance = distanceSensor.readRangeContinuousMillimeters() * 0.1 + distance * 0.9;
 	}
-	return sensorValue;
+
+	return distiance;
 }
 
 /*
